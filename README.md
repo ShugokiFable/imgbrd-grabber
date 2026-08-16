@@ -24,7 +24,7 @@ Compared to stock Grabber, this fork focuses on things that break real use: hung
 | Change | Why it matters |
 |--------|----------------|
 | **Download queue hang fix** | Aborted network replies no longer leak concurrency slots. Before this, canceling or failing requests could freeze *all* further downloads until you restarted the app. Also avoids a related shutdown crash. |
-| **Gelbooru 0.2 / Rule34 XML errors** | Sites that return HTTP 200 with an XML *error* body (e.g. unauthenticated Rule34) no longer crash the JS parser (`Cannot read property 'post' of undefined`). The engine reports the error and can fall back cleanly. |
+| **Gelbooru 0.2 / Rule34 XML errors** | Still in this tree. The same fix is now **upstream 7.14.0** ([#3662](https://github.com/Bionus/imgbrd-grabber/pull/3662)). Sites that return HTTP 200 with an XML *error* body no longer crash the JS parser. |
 
 ### Sources
 
@@ -53,8 +53,10 @@ Compared to stock Grabber, this fork focuses on things that break real use: hung
 
 | Tag | Notes |
 |-----|--------|
-| [`v7.13.0-fable.2`](https://github.com/ShugokiFable/imgbrd-grabber/releases/tag/v7.13.0-fable.2) | Current. Full rebuild after upstream merge + all Fable fixes. Portable x64 zip (`Grabber.exe`). |
+| [`v7.13.0-fable.2`](https://github.com/ShugokiFable/imgbrd-grabber/releases/tag/v7.13.0-fable.2) | Latest packaged Windows zip (`Grabber.exe`). Built **before** the 7.14.0 upstream merge. |
 | [`v7.13.0-fable.1`](https://github.com/ShugokiFable/imgbrd-grabber/releases/tag/v7.13.0-fable.1) | First Fable package with translation packaging fix. |
+
+`develop` and `master` source is now **upstream 7.14.0 + Fable**. No new Windows zip has been cut yet (needs a Qt/MSVC rebuild). Use the tag above for a ready-to-run binary, or build from `develop` for the merged tree.
 
 Unpack the zip and run `Grabber.exe`. No installer required.
 
@@ -82,9 +84,8 @@ Full feature write-up and screenshots: [upstream README / site](https://github.c
 
 | Branch | Role |
 |--------|------|
-| `develop` | **Default.** Fable fixes + synced upstream develop. Tagged Fable releases are cut from here. |
-| `feature/fable-develop` | Same tip as `develop` (integration / WIP line). |
-| `master` | Older merge line; prefer `develop` + Fable tags for builds. |
+| `develop` | **Default.** Fable fixes on top of upstream 7.14.0. Tagged Fable releases are cut from here. |
+| `master` | Same tree as `develop`. |
 
 ---
 
@@ -120,6 +121,12 @@ Support the original author if you use Grabber:
 ---
 
 ## Changelog (Fable tags)
+
+### Unreleased (develop, 2026-08-16)
+- Merged upstream `develop` (7.14.0): anime-pictures PNG previews, macOS resource/signature fixes, Qt 6.10/6.11 bumps, thumbnail/favorite/monitor fixes, and related official work.
+- Gelbooru 0.2 XML error handling is now also upstream; this fork kept the upstream form.
+- Site-model tslint cleanup (no behavior change).
+- Ignore compiled `downloader.js` so `npm run build` does not dirty the worktree.
 
 ### v7.13.0-fable.2
 - Rebuild on latest upstream `develop` merge (referer defaults, ISO 8601 dates, blacklist `QStringList`, Danbooru UA, removable site headers, …).
