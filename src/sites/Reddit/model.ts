@@ -18,7 +18,7 @@ const BOORU_META_RE = /^(rating|score|width|height|filesize|filetype|status|pare
 /** Map multi-site order:/sort: freestyle values onto Reddit sort= query. */
 function mapRedditSort(val: string): string {
 	const v = val.toLowerCase();
-	const map: { [key: string]: string } = {
+	const sortMap: { [key: string]: string } = {
 		"hot": "hot",
 		"new": "new",
 		"newest": "new",
@@ -40,7 +40,7 @@ function mapRedditSort(val: string): string {
 		"relevance": "relevance",
 		"comments": "comments",
 	};
-	return map[v] || v;
+	return sortMap[v] || v;
 }
 
 const IMAGE_EXT_RE = /\.(jpe?g|png|gif|webp|bmp|mp4|webm|gifv)(\?|#|$)/i;
@@ -299,14 +299,14 @@ export const source: ISource = {
 
 					// /user/<name>/submitted — was parsed but never wired before
 					if (search.user && search.tags.length === 0 && !search.subreddit) {
-						const args = {
+						const userArgs = {
 							sort: search.sort || "new",
 							t: search.since || "all",
 							limit: opts.limit,
 							raw_json: 1,
 							type: "links",
 						};
-						return "/user/" + encodeURIComponent(search.user) + "/submitted.json" + makeArgs(args);
+						return "/user/" + encodeURIComponent(search.user) + "/submitted.json" + makeArgs(userArgs);
 					}
 
 					const prefix = search.subreddit
@@ -314,7 +314,7 @@ export const source: ISource = {
 						: (search.user ? "/user/" + encodeURIComponent(search.user) : "");
 
 					if (q.length > 0) {
-						const args = {
+						const searchArgs = {
 							q,
 							// Relevance ranks keyword matches; hot/top without q dumps the front page
 							sort: search.sort || "relevance",
@@ -326,7 +326,7 @@ export const source: ISource = {
 							include_over_18: "on",
 						};
 						const base = prefix || "";
-						return base + "/search.json" + makeArgs(args);
+						return base + "/search.json" + makeArgs(searchArgs);
 					}
 
 					// No tags: listing endpoint (hot/new/top) for a subreddit or front page
