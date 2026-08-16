@@ -53,10 +53,9 @@ Compared to stock Grabber, this fork focuses on things that break real use: hung
 
 | Tag | Notes |
 |-----|--------|
-| [`v7.13.0-fable.2`](https://github.com/ShugokiFable/imgbrd-grabber/releases/tag/v7.13.0-fable.2) | Latest packaged Windows zip (`Grabber.exe`). Built **before** the 7.14.0 upstream merge. |
+| [`v7.14.0-fable.1`](https://github.com/ShugokiFable/imgbrd-grabber/releases/tag/v7.14.0-fable.1) | **Current.** Portable Windows x64 zip (`Grabber.exe`). Fable fixes on official 7.14.0. |
+| [`v7.13.0-fable.2`](https://github.com/ShugokiFable/imgbrd-grabber/releases/tag/v7.13.0-fable.2) | Previous Fable zip, before the 7.14.0 merge. |
 | [`v7.13.0-fable.1`](https://github.com/ShugokiFable/imgbrd-grabber/releases/tag/v7.13.0-fable.1) | First Fable package with translation packaging fix. |
-
-`develop` and `master` source is now **upstream 7.14.0 + Fable**. No new Windows zip has been cut yet (needs a Qt/MSVC rebuild). Use the tag above for a ready-to-run binary, or build from `develop` for the merged tree.
 
 Unpack the zip and run `Grabber.exe`. No installer required.
 
@@ -103,7 +102,7 @@ Same stack as upstream (Qt 6, CMake/Ninja, OpenSSL). See [Compilation](https://b
 
 Windows: configure with CMake against Qt 6 + MSVC, build `Release`, then package with `scripts/package-windows.bat` (needs Git Bash, 7-Zip, `windeployqt`).
 
-Fable Windows release builds use Qt **6.9.x** / MSVC and stamp portable zips as `Grabber_7.13.0-fable.N_x64.zip`.
+Fable Windows release builds use Qt **6.9.x** / MSVC and stamp portable zips as `Grabber_7.14.0-fable.N_x64.zip`. CMake `project()` needs a numeric version, so pass `-DVERSION=7.14.0 -DVERSION_DISPLAY=7.14.0-fable.1`.
 
 ---
 
@@ -122,11 +121,11 @@ Support the original author if you use Grabber:
 
 ## Changelog (Fable tags)
 
-### Unreleased (develop, 2026-08-16)
-- Merged upstream `develop` (7.14.0): anime-pictures PNG previews, macOS resource/signature fixes, Qt 6.10/6.11 bumps, thumbnail/favorite/monitor fixes, and related official work.
+### v7.14.0-fable.1
+- Windows rebuild of Fable on official 7.14.0 (search history, cookie import, better backups, E621 v2, more Gelbooru/Rule34 fixes, crash fixes, …).
+- All prior Fable-only fixes kept (download hang, Kemono v1 API, order/sort hygiene, translation packaging, dark themes).
 - Gelbooru 0.2 XML error handling is now also upstream; this fork kept the upstream form.
-- Site-model tslint cleanup (no behavior change).
-- Ignore compiled `downloader.js` so `npm run build` does not dirty the worktree.
+- CMake accepts hyphenated Fable display versions (`-DVERSION_DISPLAY=`).
 
 ### v7.13.0-fable.2
 - Rebuild on latest upstream `develop` merge (referer defaults, ISO 8601 dates, blacklist `QStringList`, Danbooru UA, removable site headers, …).
