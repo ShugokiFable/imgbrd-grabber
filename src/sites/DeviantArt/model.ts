@@ -27,7 +27,7 @@ const orderMap: Record<string, number> = {
 function parseSearch(search: string): { query: string, order?: number } {
 	// Strip booru meta that poisons DA free-text search; keep order intent
 	const stripped = Grabber.stripBooruMetaTags(search, { keepOrder: true });
-	let query = stripped.query;
+	const query = stripped.query;
 	let order: number = 0;
 
 	// Also walk residual tokens for order: / sort: that strip left as empty order string only

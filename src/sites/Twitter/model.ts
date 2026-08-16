@@ -105,13 +105,6 @@ function parseTwitterSearch(raw: string): {
 	replies: boolean,
 	resultType: "recent" | "popular" | "mixed",
 } {
-	const meta: ISource["meta"] = {
-		user_id: { type: "input" },
-		list_id: { type: "input" },
-		retweets: { type: "bool", default: true },
-		replies: { type: "bool", default: true },
-	};
-
 	// Drop booru meta before parseSearchQuery so "rating:safe user stuff" doesn't become username
 	const stripped = Grabber.stripBooruMetaTags(raw, { keepOrder: true });
 	const orderRaw = stripped.order || "";
@@ -128,12 +121,10 @@ function parseTwitterSearch(raw: string): {
 		const lower = t.toLowerCase();
 		if (lower.indexOf("order:") === 0 || lower.indexOf("sort:") === 0) {
 			const v = t.substr(t.indexOf(":") + 1).toLowerCase();
-			if (v === "popular" || v === "score" || v === "best" || v === "rank" || v === "mixed") {
-				resultType = v === "mixed" ? "mixed" : "popular";
-			} else {
-				// newest / recent / desc / id_desc / date → recent
-				resultType = "recent";
-			}
+			// newest / recent / desc / id_desc / date → recent
+			resultType = v === "mixed"
+				? "mixed"
+				: (v === "popular" || v === "score" || v === "best" || v === "rank" ? "popular" : "recent");
 			continue;
 		}
 		if (lower.indexOf("result:") === 0) {
@@ -222,24 +213,24 @@ export const source: ISource = {
 
 						// List lookup
 						if (search.listId) {
-							const params = [
+							const listParams = [
 								...commonParams,
 								"list_id=" + search.listId,
 							];
-							return "/1.1/lists/statuses.json?" + params.join("&") + pageUrl;
+							return "/1.1/lists/statuses.json?" + listParams.join("&") + pageUrl;
 						}
 
 						// Free-text / hashtag search (media only)
 						if (search.query) {
 							const q = search.query + " filter:media -filter:retweets";
-							const params = [
+							const searchParams = [
 								"q=" + encodeURIComponent(q),
 								"count=" + opts.limit,
 								"result_type=" + search.resultType,
 								"include_entities=true",
 								"tweet_mode=extended",
 							];
-							return "/1.1/search/tweets.json?" + params.join("&") + pageUrl;
+							return "/1.1/search/tweets.json?" + searchParams.join("&") + pageUrl;
 						}
 
 						// User timeline
