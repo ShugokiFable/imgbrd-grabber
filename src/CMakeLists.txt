@@ -27,6 +27,17 @@ if(MSVC)
 endif()
 project(Grabber VERSION ${VERSION})
 
+# Nested targets (lexbor) ignore CMAKE_MSVC_DEBUG_INFORMATION_FORMAT and still
+# pass -Zi /Fd to a shared PDB. Rewrite config flags so every MSVC object uses /Z7.
+if(MSVC)
+	foreach(_grabber_msvc_flags CMAKE_C_FLAGS_DEBUG CMAKE_CXX_FLAGS_DEBUG CMAKE_C_FLAGS_RELWITHDEBINFO CMAKE_CXX_FLAGS_RELWITHDEBINFO CMAKE_C_FLAGS_RELEASE CMAKE_CXX_FLAGS_RELEASE)
+		if(DEFINED ${_grabber_msvc_flags})
+			string(REPLACE "/Zi" "/Z7" ${_grabber_msvc_flags} "${${_grabber_msvc_flags}}")
+			string(REPLACE "-Zi" "-Z7" ${_grabber_msvc_flags} "${${_grabber_msvc_flags}}")
+		endif()
+	endforeach()
+endif()
+
 enable_testing()
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)

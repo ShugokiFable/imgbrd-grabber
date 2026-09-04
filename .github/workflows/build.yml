@@ -415,7 +415,10 @@ jobs:
     steps:
       - name: Set environment
         shell: bash
-        run: echo "BUILD_TYPE=$([ "$GRABBER_IS_NIGHTLY" = "1" ] && echo "Release" || echo "RelWithDebInfo")" >> $GITHUB_ENV
+        # RelWithDebInfo uses -Zi and a shared PDB. Parallel cl.exe under sccache
+        # then hits C1041 on lexbor_static.pdb even with /FS. Nightly already
+        # uses Release; tags must too.
+        run: echo "BUILD_TYPE=Release" >> $GITHUB_ENV
 
       - name: Checkout
         uses: actions/checkout@v7
