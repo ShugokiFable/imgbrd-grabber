@@ -24,6 +24,7 @@ Compared to stock Grabber, this fork focuses on things that break real use: hung
 | Change | Why it matters |
 |--------|----------------|
 | **Download queue hang fix** | Aborted network replies no longer leak concurrency slots. Before this, canceling or failing requests could freeze *all* further downloads until you restarted the app. Also avoids a related shutdown crash. |
+| **Redirect / 503 crash loop** | Search, details, thumbnails, and downloads no longer follow OIDC/login redirects or 429/503 retries forever. Sankaku login bounces and Zerochan 503 storms were crashing Grabber in Qt6Core (`0xc0000005`). Also drops `deleteLater()` on `QSharedPointer<Image>` (use-after-free on filtered results). |
 | **Gelbooru 0.2 / Rule34 XML errors** | Still in this tree. The same fix is now **upstream 7.14.0** ([#3662](https://github.com/Bionus/imgbrd-grabber/pull/3662)). Sites that return HTTP 200 with an XML *error* body no longer crash the JS parser. |
 
 ### Sources
@@ -43,7 +44,7 @@ Compared to stock Grabber, this fork focuses on things that break real use: hung
 
 ### Upstream kept in sync
 
-`develop` is periodically merged from [Bionus/imgbrd-grabber](https://github.com/Bionus/imgbrd-grabber) so you still get official fixes (referers, date parsing, Danbooru user-agent, blacklist improvements, CI bumps, and so on) **on top of** the Fable changes above.
+`develop` is periodically merged from [Bionus/imgbrd-grabber](https://github.com/Bionus/imgbrd-grabber) so you still get official fixes (Windows file-property crash, SQL worker cleanup, favorite/search-highlight fixes, and so on) **on top of** the Fable changes above.
 
 ---
 
@@ -53,7 +54,8 @@ Compared to stock Grabber, this fork focuses on things that break real use: hung
 
 | Tag | Notes |
 |-----|--------|
-| [`v7.14.0-fable.1`](https://github.com/ShugokiFable/imgbrd-grabber/releases/tag/v7.14.0-fable.1) | **Current.** Portable Windows x64 zip (`Grabber.exe`). Fable fixes on official 7.14.0. |
+| [`v7.14.0-fable.2`](https://github.com/ShugokiFable/imgbrd-grabber/releases/tag/v7.14.0-fable.2) | **Current.** Crash-loop fix + latest Bionus develop on 7.14.0. Portable Windows x64 zip. |
+| [`v7.14.0-fable.1`](https://github.com/ShugokiFable/imgbrd-grabber/releases/tag/v7.14.0-fable.1) | Previous. Fable fixes on official 7.14.0. |
 | [`v7.13.0-fable.2`](https://github.com/ShugokiFable/imgbrd-grabber/releases/tag/v7.13.0-fable.2) | Previous Fable zip, before the 7.14.0 merge. |
 | [`v7.13.0-fable.1`](https://github.com/ShugokiFable/imgbrd-grabber/releases/tag/v7.13.0-fable.1) | First Fable package with translation packaging fix. |
 
@@ -83,7 +85,7 @@ Full feature write-up and screenshots: [upstream README / site](https://github.c
 
 | Branch | Role |
 |--------|------|
-| `develop` | **Default.** Fable fixes on top of upstream 7.14.0. Tagged Fable releases are cut from here. |
+| `develop` | **Default.** Fable fixes on top of upstream 7.14.0 + later Bionus develop. Tagged Fable releases are cut from here. |
 | `master` | Same tree as `develop`. |
 
 ---
@@ -102,7 +104,7 @@ Same stack as upstream (Qt 6, CMake/Ninja, OpenSSL). See [Compilation](https://b
 
 Windows: configure with CMake against Qt 6 + MSVC, build `Release`, then package with `scripts/package-windows.bat` (needs Git Bash, 7-Zip, `windeployqt`).
 
-Fable Windows release builds use Qt **6.9.x** / MSVC and stamp portable zips as `Grabber_7.14.0-fable.N_x64.zip`. CMake `project()` needs a numeric version, so pass `-DVERSION=7.14.0 -DVERSION_DISPLAY=7.14.0-fable.1`.
+Fable Windows release builds use Qt **6.9.x** / MSVC and stamp portable zips as `Grabber_7.14.0-fable.N_x64.zip`. CMake `project()` needs a numeric version, so pass `-DVERSION=7.14.0 -DVERSION_DISPLAY=7.14.0-fable.2`.
 
 ---
 
@@ -120,6 +122,13 @@ Support the original author if you use Grabber:
 ---
 
 ## Changelog (Fable tags)
+
+### v7.14.0-fable.2
+- Stop unbounded HTTP redirect and 429/503 retry loops (Sankaku OIDC bounce and Zerochan 503 storms were crashing in Qt6Core).
+- Do not `deleteLater()` `QSharedPointer<Image>` objects; that raced the shared pointer and could AV on filtered results.
+- Guard Slushe/Reddit JSON and DeviantArt RSS parsers against empty/invalid bodies.
+- Package `CrashReporter.exe` in Windows zips.
+- Merged latest Bionus `develop` (Windows property-string ownership, SQL worker cleanup, favorite image tag, search highlight fonts, …).
 
 ### v7.14.0-fable.1
 - Windows rebuild of Fable on official 7.14.0 (search history, cookie import, better backups, E621 v2, more Gelbooru/Rule34 fixes, crash fixes, …).

@@ -6,7 +6,7 @@ else()
 	string(REGEX REPLACE "^v" "" VERSION "${VERSION}")
 endif()
 # CMake project() only accepts numeric versions. Fable tags like
-# 7.14.0-fable.1 still go into -DVERSION via VERSION_DISPLAY.
+# 7.14.0-fable.2 still go into -DVERSION via VERSION_DISPLAY.
 if(NOT DEFINED VERSION_DISPLAY)
 	set(VERSION_DISPLAY "${VERSION}")
 endif()

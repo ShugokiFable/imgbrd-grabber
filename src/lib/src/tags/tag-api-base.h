@@ -3,6 +3,7 @@
 
 #include <QMap>
 #include <QObject>
+#include <QSet>
 #include <QUrl>
 
 
@@ -25,7 +26,7 @@ class TagApiBase : public QObject
 
 		explicit TagApiBase(Profile *profile, Site *site, Api *api, QObject *parent = nullptr);
 		~TagApiBase() override;
-		void load(bool rateLimit = false);
+		void load(bool rateLimit = false, bool continueChain = false);
 
 	protected:
 		void setUrl(QUrl url, QMap<QString, QString> headers = {});
@@ -49,6 +50,9 @@ class TagApiBase : public QObject
 		QUrl m_url;
 		QMap<QString, QString> m_headers;
 		NetworkReply *m_reply;
+		QSet<QString> m_redirectsSeen;
+		int m_redirectHops = 0;
+		int m_rateLimitRetries = 0;
 };
 
 Q_DECLARE_METATYPE(TagApiBase::LoadResult)

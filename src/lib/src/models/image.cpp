@@ -27,6 +27,7 @@
 #include "models/pool.h"
 #include "models/profile.h"
 #include "models/site.h"
+#include "network/network-follow.h"
 #include "network/network-reply.h"
 #include "tags/tag.h"
 #include "tags/tag-database.h"
@@ -456,10 +457,16 @@ bool Image::read(const QJsonObject &json, const QMap<QString, Site*> &sites)
 }
 
 
-void Image::loadDetails(bool rateLimit)
+void Image::loadDetails(bool rateLimit, bool continueChain)
 {
 	if (m_loadingDetails) {
 		return;
+	}
+
+	if (!continueChain) {
+		m_detailsRedirectsSeen.clear();
+		m_detailsRedirectHops = 0;
+		m_detailsRateLimitRetries = 0;
 	}
 
 	if (m_loadedDetails || m_pageUrl.isEmpty()) {
@@ -498,16 +505,33 @@ void Image::parseDetails()
 	// Check redirection
 	QUrl redir = m_loadDetails->attribute(QNetworkRequest::RedirectionTargetAttribute).toUrl();
 	if (!redir.isEmpty()) {
-		m_pageUrl = m_parentSite->fixUrl(redir);
-		log(QStringLiteral("Redirecting details page to `%1`").arg(m_pageUrl.toString()));
-		loadDetails();
+		const QUrl newUrl = m_parentSite->fixUrl(redir);
+		log(QStringLiteral("Redirecting details page to `%1`").arg(newUrl.toString()));
+		QString redirectReason;
+		if (NetworkFollow::takeRedirect(m_pageUrl, newUrl, &m_detailsRedirectsSeen, &m_detailsRedirectHops, &redirectReason) == NetworkFollow::Action::Stop) {
+			log(QStringLiteral("Stopping details redirects: %1").arg(redirectReason), Logger::Warning);
+			m_loadDetails->deleteLater();
+			m_loadDetails = nullptr;
+			emit finishedLoadingTags(LoadTagsResult::Error);
+			return;
+		}
+		m_pageUrl = newUrl;
+		loadDetails(false, true);
 		return;
 	}
 
 	const int statusCode = m_loadDetails->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
 	if (statusCode == 429 || statusCode == 503 || statusCode == 509) {
+		QString retryReason;
+		if (NetworkFollow::takeRetry(&m_detailsRateLimitRetries, &retryReason) == NetworkFollow::Action::Stop) {
+			log(QStringLiteral("Giving up on details after rate limit (HTTP %1): %2").arg(statusCode).arg(retryReason), Logger::Warning);
+			m_loadDetails->deleteLater();
+			m_loadDetails = nullptr;
+			emit finishedLoadingTags(LoadTagsResult::Error);
+			return;
+		}
 		log(QStringLiteral("Details limit reached (HTTP %1). New try.").arg(statusCode));
-		loadDetails(true);
+		loadDetails(true, true);
 		return;
 	}
 

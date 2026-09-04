@@ -5,6 +5,7 @@
 #include <QList>
 #include <QMap>
 #include <QObject>
+#include <QSet>
 #include <QSharedPointer>
 #include <QUrl>
 #include "models/filtering/post-filter.h"
@@ -107,6 +108,9 @@ class PageApi : public QObject
 		bool m_imagesCountSafe, m_pagesCountSafe;
 		bool m_loading = false;
 		bool m_loaded = false;
+		QSet<QString> m_redirectsSeen;
+		int m_redirectHops = 0;
+		int m_rateLimitRetries = 0;
 };
 
 Q_DECLARE_METATYPE(PageApi::LoadResult)

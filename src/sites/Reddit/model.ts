@@ -339,7 +339,15 @@ export const source: ISource = {
 					return (prefix || "") + listing + ".json" + makeArgs(args);
 				},
 				parse: (src: string): IParsedSearch | IError => {
-					const data = JSON.parse(src);
+					let data: any;
+					try {
+						data = JSON.parse(src);
+					} catch {
+						return { error: "Invalid JSON" };
+					}
+					if (!data) {
+						return { error: "Invalid JSON" };
+					}
 					if (data.error || data.message) {
 						return { error: String(data.message || data.error) };
 					}
