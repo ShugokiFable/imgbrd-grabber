@@ -17,6 +17,14 @@ if(NOT VERSION_NUMERIC)
 	set(VERSION_NUMERIC "7.14.0")
 endif()
 set(VERSION "${VERSION_NUMERIC}")
+# /Zi + parallel MSVC (and sccache wrapping cl) races on a shared PDB:
+# C1041 cannot open program database. Embed debug info per object instead.
+if(POLICY CMP0141)
+	cmake_policy(SET CMP0141 NEW)
+endif()
+if(MSVC)
+	set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug,RelWithDebInfo>:Embedded>")
+endif()
 project(Grabber VERSION ${VERSION})
 
 enable_testing()
