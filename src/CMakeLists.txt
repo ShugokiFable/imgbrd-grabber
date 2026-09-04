@@ -7,6 +7,8 @@ else()
 endif()
 # CMake project() only accepts numeric versions. Fable tags like
 # 7.14.0-fable.2 still go into -DVERSION via VERSION_DISPLAY.
+# Subdirs also call project(... VERSION ${VERSION}), so VERSION itself
+# must be numeric after this point. CI passes -DVERSION=$tag on releases.
 if(NOT DEFINED VERSION_DISPLAY)
 	set(VERSION_DISPLAY "${VERSION}")
 endif()
@@ -14,7 +16,8 @@ string(REGEX MATCH "^[0-9]+(\\.[0-9]+)*" VERSION_NUMERIC "${VERSION}")
 if(NOT VERSION_NUMERIC)
 	set(VERSION_NUMERIC "7.14.0")
 endif()
-project(Grabber VERSION ${VERSION_NUMERIC})
+set(VERSION "${VERSION_NUMERIC}")
+project(Grabber VERSION ${VERSION})
 
 enable_testing()
 
@@ -73,12 +76,12 @@ endif()
 
 # Android settings
 set(ANDROID_APP_NAME ${PROJECT_NAME})
-set(ANDROID_APP_VERSION_NAME ${VERSION})
+set(ANDROID_APP_VERSION_NAME ${VERSION_DISPLAY})
 set(ANDROID_APP_VERSION_CODE 1)
 set(ANDROID_APP_PACKAGE_NAME "org.bionus.grabber")
 set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE BOTH)
 
-message(STATUS "Configuring for version '${VERSION}'")
+message(STATUS "Configuring for version '${VERSION_DISPLAY}' (numeric ${VERSION})")
 message(STATUS "Configuring for platform '${VERSION_PLATFORM}' (${CMAKE_SYSTEM_PROCESSOR})")
 
 add_definitions(-DVERSION="${VERSION_DISPLAY}")
