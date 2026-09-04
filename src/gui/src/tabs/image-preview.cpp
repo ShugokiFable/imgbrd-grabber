@@ -22,6 +22,7 @@
 #include "models/image.h"
 #include "models/profile.h"
 #include "models/site.h"
+#include "network/network-follow.h"
 #include "network/network-reply.h"
 #include "ui/QAffiche.h"
 #include "ui/QBouton.h"
@@ -138,6 +139,12 @@ void ImagePreview::finishedLoadingPreview()
 	// Check redirection
 	QUrl redirection = m_reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toUrl();
 	if (!redirection.isEmpty()) {
+		QString redirectReason;
+		if (NetworkFollow::takeRedirect(m_thumbnailUrl, redirection, &m_redirectsSeen, &m_redirectHops, &redirectReason) == NetworkFollow::Action::Stop) {
+			log(QStringLiteral("Stopping thumbnail redirects: %1").arg(redirectReason), Logger::Warning);
+			finishedLoading();
+			return;
+		}
 		m_thumbnailUrl = redirection;
 		load();
 		return;

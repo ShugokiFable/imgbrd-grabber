@@ -9,6 +9,9 @@ on:
       - 'scripts/package-sources.sh'
       - 'src/sites/**/model.ts'
 
+permissions:
+  contents: read
+
 jobs:
   sources:
     name: Sources
@@ -50,6 +53,8 @@ jobs:
     name: Upload to GitHub releases
     runs-on: ubuntu-latest
     needs: sources
+    permissions:
+      contents: write
 
     steps:
       - name: Download artifacts

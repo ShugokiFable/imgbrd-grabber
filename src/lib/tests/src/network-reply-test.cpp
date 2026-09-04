@@ -69,4 +69,19 @@ TEST_CASE("NetworkReply", "[network-reply]")
 
 		REQUIRE(reply.readAll().isEmpty());
 	}
+
+	SECTION("Aborting after start() with a 0ms delay never dispatches")
+	{
+		NetworkReply reply(request, &manager);
+		int finishedCount = 0;
+		QObject::connect(&reply, &NetworkReply::finished, [&]() { finishedCount++; });
+
+		reply.start(0);
+		reply.abort();
+		drainEventLoop();
+
+		REQUIRE_FALSE(reply.isRunning());
+		REQUIRE(finishedCount == 0);
+		REQUIRE(reply.networkReply() == nullptr);
+	}
 }

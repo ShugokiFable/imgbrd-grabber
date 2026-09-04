@@ -16,6 +16,7 @@
 #include "models/profile.h"
 #include "models/site.h"
 #include "models/source.h"
+#include "network/network-follow.h"
 #include "network/network-reply.h"
 
 
@@ -366,6 +367,12 @@ void ImageDownloader::networkError(NetworkReply::NetworkError error, const QStri
 		// Detect HTTP 429 / 503 / 509 usage limit reached
 		const int statusCode = m_reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
 		if (statusCode == 429 || statusCode == 503 || statusCode == 509) {
+			QString retryReason;
+			if (NetworkFollow::takeRetry(&m_rateLimitRetries, &retryReason) == NetworkFollow::Action::Stop) {
+				log(QStringLiteral("Giving up on image `%1` after rate limit (%2): %3").arg(m_image->url().toString(), QString::number(statusCode), retryReason), Logger::Warning);
+				emit saved(m_image, makeResult(m_paths, Image::SaveResult::NetworkError));
+				return;
+			}
 			log(QStringLiteral("Rate limit reached (%1) for the image `%2`. New try.").arg(QString::number(statusCode), m_image->url().toString()), Logger::Warning);
 			loadImage(true);
 			return;
@@ -389,6 +396,13 @@ void ImageDownloader::success()
 			return;
 		}
 
+		QString redirectReason;
+		if (NetworkFollow::takeRedirect(m_url, redirect, &m_redirectsSeen, &m_redirectHops, &redirectReason) == NetworkFollow::Action::Stop) {
+			log(QStringLiteral("Stopping image redirects: %1").arg(redirectReason), Logger::Warning);
+			QFile::remove(m_temporaryPath);
+			emit saved(m_image, makeResult(m_paths, Image::SaveResult::NetworkError));
+			return;
+		}
 		log(QStringLiteral("Redirecting image `%1` to `%2`").arg(m_url.toString(), redirect.toString()), Logger::Info);
 		m_url = redirect;
 		loadImage();

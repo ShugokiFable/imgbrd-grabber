@@ -37,7 +37,7 @@ export const source: ISource = {
                     return "/index.php?r=posts/index&q=" + search + (page === 0 ? '' : "&page=" + page);
                 },
                 parse: (src: string): IParsedSearch => {
-                    const pageMatch = Grabber.regexMatch('<div class="pagination">\\W*(?:<[ab].*>.*<\\/[ab]>\\W*)*(?:<[ab] href="[^"]+page=(?<page_arg>\\d+)".*>.*<\\/[ab]>|<[ab].*>(?<page_real>\\d+)<\\/[ab]>)\\s*<\\/div>', src);
+                    const pageMatch = Grabber.regexMatch('<div class="pagination">\\W*(?:<[ab][^>]*>[^<]*<\\/[ab]>\\W*)*(?:<[ab] href="[^"]+page=(?<page_arg>\\d+)"[^>]*>[^<]*<\\/[ab]>|<[ab][^>]*>(?<page_real>\\d+)<\\/[ab]>)\\s*<\\/div>', src);
                     const pageCount = pageMatch && "page_arg" in pageMatch
                         ? parseInt(pageMatch["page_arg"], 10) + 1
                         : pageMatch && "page_real" in pageMatch

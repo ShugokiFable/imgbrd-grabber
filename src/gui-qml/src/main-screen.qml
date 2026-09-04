@@ -17,10 +17,17 @@ ApplicationWindow {
 
     property string currentPage: "search"
     property var activeSite: backend.sites.filter(site => site.url === gSettings.activeSource.value)[0]
+    property bool exitRequested: false
 
     Material.theme: gSettings.appearance_materialTheme.value
     Material.primary: gSettings.appearance_materialPrimary.value
     Material.accent: gSettings.appearance_materialAccent.value
+
+    onClosing: close => {
+        if (!exitRequested && mainStackView.handleBack()) {
+            close.accepted = false
+        }
+    }
 
     SB.StatusBar {
         theme: gSettings.appearance_materialTheme.value
@@ -186,6 +193,7 @@ ApplicationWindow {
                     if (dontAskAgain.checked) {
                         gSettings.mobile_confirmExit.setValue(false)
                     }
+                    exitRequested = true
                     Qt.quit()
                 }
 
@@ -243,18 +251,26 @@ ApplicationWindow {
         }
 
         property double backPressed: 0
+
+        function handleBack() {
+            const now = new Date().getTime()
+            if (mainStackView.depth > 1) {
+                mainStackView.pop()
+            } else if (currentPage !== "search") {
+                currentPage = "search"
+            } else if (gSettings.mobile_confirmExit.value) {
+                confirmExitDialog.open()
+            } else if (gSettings.mobile_doubleBackExit.value && now - backPressed > 1000) {
+                backPressed = now
+            } else {
+                return false
+            }
+            return true
+        }
+
         Keys.onReleased: event => {
             if (event.key === Qt.Key_Back || event.key === Qt.Key_Escape) {
-                const now = new Date().getTime()
-                if (mainStackView.depth > 1) {
-                    mainStackView.pop()
-                } else if (currentPage !== "search") {
-                    currentPage = "search";
-                } else if (gSettings.mobile_confirmExit.value) {
-                    confirmExitDialog.open()
-                } else if (gSettings.mobile_doubleBackExit.value && now - backPressed > 1000) {
-                    backPressed = now
-                } else {
+                if (!mainStackView.handleBack()) {
                     Qt.quit()
                 }
                 event.accepted = true

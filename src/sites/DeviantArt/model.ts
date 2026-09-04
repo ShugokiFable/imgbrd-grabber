@@ -123,24 +123,32 @@ export const source: ISource = {
 				},
 				parse: (src: string): IParsedSearch => {
 					const parsed = Grabber.parseXML(src);
+					if (!parsed || !parsed.rss || !parsed.rss.channel) {
+						return { images: [] };
+					}
 					const data = Grabber.makeArray(parsed.rss.channel.item);
 
 					const images: IImage[] = [];
 					for (const image of data) {
-						if (image["media:content"]["@attributes"]["medium"] === "document") {
+						const content = image["media:content"];
+						const contentAttrs = content && content["@attributes"];
+						if (!contentAttrs) {
+							continue;
+						}
+						if (contentAttrs["medium"] === "document") {
 							continue;
 						}
 
 						const thumbnail = Array.isArray(image["media:thumbnail"]) ? image["media:thumbnail"][0] : image["media:thumbnail"];
 						const credit = Array.isArray(image["media:credit"]) ? image["media:credit"][0] : image["media:credit"];
-						const rating = image["media:rating"]["#text"].trim();
+						const rating = ((image["media:rating"] && image["media:rating"]["#text"]) || "").trim();
 
 						const img: IImage = {
 							page_url: image["link"]["#text"],
 							created_at: image["pubDate"]["#text"],
 							name: image["media:title"]["#text"],
-							author: credit["#text"],
-							tags: (image["media:keywords"]["#text"] || "").trim().split(", ").filter((t: string) => t.length > 0),
+							author: (credit && credit["#text"]) || "",
+							tags: ((image["media:keywords"] && image["media:keywords"]["#text"]) || "").trim().split(", ").filter((t: string) => t.length > 0),
 							preview_url: thumbnail && (thumbnail["#text"] || thumbnail["@attributes"]["url"]),
 							preview_width: thumbnail && thumbnail["@attributes"]["width"],
 							preview_height: thumbnail && thumbnail["@attributes"]["height"],

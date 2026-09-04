@@ -68,15 +68,24 @@ Grabber.typedXML = (val: any) => {
  * Set a value in an object using the dot ("a.b.c") path notation.
  */
 function _set(obj: any, path: string, value: any): void {
+    const blocked = (key: string): boolean =>
+        key === "__proto__" || key === "constructor" || key === "prototype";
     const parts = path.split(".");
     for (let i = 0; i < parts.length - 1; ++i) {
         const part = parts[i];
-        if (!(part in obj)) {
+        if (blocked(part)) {
+            return;
+        }
+        if (!(part in obj) || typeof obj[part] !== "object" || obj[part] === null) {
             obj[part] = {};
         }
         obj = obj[part];
     }
-    obj[parts[parts.length - 1]] = value;
+    const last = parts[parts.length - 1];
+    if (blocked(last)) {
+        return;
+    }
+    obj[last] = value;
 }
 
 /**

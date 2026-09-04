@@ -3,6 +3,7 @@
 
 #include <QList>
 #include <QObject>
+#include <QSet>
 #include <QSharedPointer>
 #include <QString>
 #include <QStringList>
@@ -74,6 +75,9 @@ class ImageDownloader : public QObject
 		NetworkReply *m_reply = nullptr;
 		QUrl m_url;
 		bool m_tryingSample = false;
+		QSet<QString> m_redirectsSeen;
+		int m_redirectHops = 0;
+		int m_rateLimitRetries = 0;
 };
 
 #endif // IMAGE_DOWNLOADER_H

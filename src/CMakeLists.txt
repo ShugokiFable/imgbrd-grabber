@@ -1,4 +1,20 @@
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.16)
+
+if((NOT DEFINED VERSION) OR ((DEFINED NIGHTLY) AND (NIGHTLY MATCHES "1")))
+	set(VERSION "7.14.0")
+else()
+	string(REGEX REPLACE "^v" "" VERSION "${VERSION}")
+endif()
+# CMake project() only accepts numeric versions. Fable tags like
+# 7.14.0-fable.2 still go into -DVERSION via VERSION_DISPLAY.
+if(NOT DEFINED VERSION_DISPLAY)
+	set(VERSION_DISPLAY "${VERSION}")
+endif()
+string(REGEX MATCH "^[0-9]+(\\.[0-9]+)*" VERSION_NUMERIC "${VERSION}")
+if(NOT VERSION_NUMERIC)
+	set(VERSION_NUMERIC "7.14.0")
+endif()
+project(Grabber VERSION ${VERSION_NUMERIC})
 
 enable_testing()
 
@@ -9,8 +25,8 @@ set(CMAKE_AUTORCC ON)
 set(ignoreMe "${QT_QMAKE_EXECUTABLE}") # Ignore "Manually-specified variables were not used by the project" warnings
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
 
-# Use C++ 11 standard
-set(CMAKE_CXX_STANDARD 11)
+# Use C++ 17 standard
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -38,22 +54,6 @@ endif()
 
 # Disable Qt dependency walking warnings
 set(QT_SILENCE_MISSING_DEPENDENCY_TARGET_WARNING ON)
-
-if((NOT DEFINED VERSION) OR ((DEFINED NIGHTLY) AND (NIGHTLY MATCHES "1")))
-	set(VERSION "7.14.0")
-else()
-	string(REGEX REPLACE "^v" "" VERSION "${VERSION}")
-endif()
-# CMake project() only accepts numeric versions. Fable tags like
-# 7.14.0-fable.1 still go into -DVERSION via VERSION_DISPLAY.
-if(NOT DEFINED VERSION_DISPLAY)
-	set(VERSION_DISPLAY "${VERSION}")
-endif()
-string(REGEX MATCH "^[0-9]+(\\.[0-9]+)*" VERSION_NUMERIC "${VERSION}")
-if(NOT VERSION_NUMERIC)
-	set(VERSION_NUMERIC "7.14.0")
-endif()
-project(Grabber VERSION ${VERSION_NUMERIC})
 
 if(NOT DEFINED VERSION_PLATFORM)
 	if(CMAKE_SYSTEM_PROCESSOR MATCHES "[aA][mM][dD]64")
@@ -171,3 +171,4 @@ add_subdirectory(sites)
 add_dependencies(gui sites)
 add_dependencies(gui-qml sites)
 add_dependencies(cli sites)
+add_dependencies(lib-tests sites)

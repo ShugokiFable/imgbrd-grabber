@@ -1,4 +1,5 @@
 #include "viewer/viewer-window.h"
+#include <cstddef>
 #include <QApplication>
 #include <QClipboard>
 #include <QCloseEvent>
@@ -309,8 +310,9 @@ void ViewerWindow::configureButtons()
 		ui->buttonsLayout->addWidget(pushButton, row, effectivePosition, 1, bs.relativeWidth);
 	}
 
-	unsigned short biggestMaxRow = 0, biggestMaxColPos = 0;
-	for (unsigned short i = 0; i < maxColPos.size(); i++) {
+	std::size_t biggestMaxRow = 0;
+	unsigned short biggestMaxColPos = 0;
+	for (std::size_t i = 0; i < maxColPos.size(); i++) {
 		unsigned short spanBack = spans.at(i).empty() ? 0 : spans.at(i).back();
 		if (maxColPos.at(i) + spanBack > biggestMaxColPos) {
 			biggestMaxRow = i;
@@ -348,7 +350,7 @@ void ViewerWindow::configureButtons()
 		return;
 	}
 
-	for (unsigned short row = 0; row < spans.size(); row++) {
+	for (std::size_t row = 0; row < spans.size(); row++) {
 		spanSum.at(row) += spans.at(row).size(); // Make spanSum include count of initial column positions for each row.
 	}
 
@@ -573,9 +575,9 @@ void ViewerWindow::openInNewTab(const QString &link)
 		m_parent->addTab(activeLink, false, true, m_tab);
 	}
 }
-void ViewerWindow::setfavorite()
+void ViewerWindow::setfavorite(const QString &tag)
 {
-	Favorite fav(m_link);
+	Favorite fav(tag);
 	const int pos = m_favorites.indexOf(fav);
 	if (pos >= 0) {
 		m_favorites[pos].setImage(m_loadedImage ? m_displayImage : m_image->previewImage());

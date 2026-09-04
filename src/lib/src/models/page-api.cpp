@@ -12,6 +12,7 @@
 #include "models/page.h"
 #include "models/search-query/search-query.h"
 #include "models/site.h"
+#include "network/network-follow.h"
 #include "network/network-reply.h"
 #include "tags/tag.h"
 
@@ -120,6 +121,10 @@ void PageApi::load(bool rateLimit, bool force)
 		}
 
 		setReply(nullptr);
+	} else if (!force) {
+		m_redirectsSeen.clear();
+		m_redirectHops = 0;
+		m_rateLimitRetries = 0;
 	}
 
 	if (m_url.isEmpty() && !m_errors.isEmpty()) {
@@ -166,7 +171,8 @@ bool PageApi::addImage(const QSharedPointer<Image> &img)
 	QStringList filters = m_postFiltering.match(img->tokens(m_profile));
 	if (!filters.isEmpty()) {
 		m_filteredImageCount++;
-		img->deleteLater();
+		// Image is QSharedPointer-owned. deleteLater() races the shared pointer's
+		// destructor and is the Qt6Core access-violation seen on filtered results.
 		log(QStringLiteral("[%1][%2] Image filtered. Reason: %3.").arg(m_site->url(), m_format, filters.join(", ")), Logger::Info);
 		return false;
 	}
@@ -189,6 +195,17 @@ void PageApi::parse()
 		QUrl newUrl = m_site->fixUrl(redir.toString(), m_url);
 		log(QStringLiteral("[%1][%2] Redirecting page `%3` to `%4`").arg(m_site->url(), m_format, m_url.toString(), newUrl.toString()), Logger::Info);
 
+		QString redirectReason;
+		if (NetworkFollow::takeRedirect(m_url, newUrl, &m_redirectsSeen, &m_redirectHops, &redirectReason) == NetworkFollow::Action::Stop) {
+			log(QStringLiteral("[%1][%2] Stopping redirects: %3").arg(m_site->url(), m_format, redirectReason), Logger::Warning);
+			m_errors.append(redirectReason);
+			setReply(nullptr);
+			m_loaded = true;
+			m_loading = false;
+			emit finishedLoading(this, LoadResult::Error);
+			return;
+		}
+
 		// HTTP -> HTTPS redirects
 		const bool ssl = m_site->setting("ssl", false).toBool();
 		if (!ssl && newUrl.path() == m_url.path() && newUrl.scheme() == "https" && m_url.scheme() == "http") {
@@ -206,6 +223,16 @@ void PageApi::parse()
 	// Detect HTTP 429 / 503 / 509 usage limit reached
 	const int statusCode = m_reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
 	if (statusCode == 429 || statusCode == 503 || statusCode == 509) {
+		QString retryReason;
+		if (NetworkFollow::takeRetry(&m_rateLimitRetries, &retryReason) == NetworkFollow::Action::Stop) {
+			log(QStringLiteral("[%1][%2] Giving up after rate limit (%3): %4").arg(m_site->url(), m_format, QString::number(statusCode), retryReason), Logger::Warning);
+			m_errors.append(retryReason);
+			setReply(nullptr);
+			m_loaded = true;
+			m_loading = false;
+			emit finishedLoading(this, LoadResult::Error);
+			return;
+		}
 		log(QStringLiteral("[%1][%2] Limit reached (%3). New try.").arg(m_site->url(), m_format, QString::number(statusCode)), Logger::Warning);
 		load(true, true);
 		return;

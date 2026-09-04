@@ -5,6 +5,7 @@
 #include <QObject>
 #include <QPixmap>
 #include <QPointer>
+#include <QSet>
 #include <QSharedPointer>
 #include <QString>
 #include <QUrl>
@@ -63,6 +64,8 @@ class ImagePreview : public QObject
 		NetworkReply *m_reply = nullptr;
 		bool m_aborted = false;
 		bool m_checked = false;
+		QSet<QString> m_redirectsSeen;
+		int m_redirectHops = 0;
 
 		QUrl m_thumbnailUrl;
 		QString m_name;

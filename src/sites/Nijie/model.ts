@@ -8,7 +8,7 @@ function completeImage(img: IImage): IImage {
 
     // Generate full URL from thumbnail URL and vice-versa
     if (img.preview_url && !img.file_url) {
-        const url = img.preview_url.replace(new RegExp("/__rs_l\d+x\d+/"), "/");
+        const url = img.preview_url.replace(/\/__rs_l\d+x\d+\//, "/");
         if (url !== img.preview_url) {
             img.file_url = url;
         }

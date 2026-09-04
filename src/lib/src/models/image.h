@@ -4,6 +4,7 @@
 #include <QMap>
 #include <QMetaType>
 #include <QObject>
+#include <QSet>
 #include <QString>
 #include "image-size.h"
 #include "loader/downloadable.h"
@@ -130,7 +131,7 @@ class Image : public QObject, public Downloadable
 		QString postSaving(const QString &path, Size size, bool addMd5 = true, bool startCommands = false, int count = 1, bool basic = false);
 
 	public slots:
-		void loadDetails(bool rateLimit = false);
+		void loadDetails(bool rateLimit = false, bool continueChain = false);
 		void abortTags();
 		void parseDetails();
 		void parseUgoiraDetails();
@@ -152,6 +153,9 @@ class Image : public QObject, public Downloadable
 		bool m_loadingDetails = false;
 		bool m_loadedDetails = false;
 		bool m_detailsParsWarnAsErr = false;
+		QSet<QString> m_detailsRedirectsSeen;
+		int m_detailsRedirectHops = 0;
+		int m_detailsRateLimitRetries = 0;
 
 		// Shared
 		// - Technical

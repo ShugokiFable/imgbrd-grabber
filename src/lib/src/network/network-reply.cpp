@@ -146,6 +146,10 @@ void NetworkReply::finishNow()
 
 void NetworkReply::startNow()
 {
+	if (m_aborted || m_finished) {
+		return;
+	}
+
 	if (m_post) {
 		m_reply = m_manager->post(m_request, m_data);
 	} else {

@@ -1,7 +1,9 @@
 #include "tags/tag-api-base.h"
+#include <QString>
 #include "logger.h"
 #include "models/api/api.h"
 #include "models/site.h"
+#include "network/network-follow.h"
 #include "network/network-reply.h"
 
 
@@ -22,8 +24,14 @@ void TagApiBase::setUrl(QUrl url, QMap<QString, QString> headers)
 	m_headers = std::move(headers);
 }
 
-void TagApiBase::load(bool rateLimit)
+void TagApiBase::load(bool rateLimit, bool continueChain)
 {
+	if (!continueChain) {
+		m_redirectsSeen.clear();
+		m_redirectHops = 0;
+		m_rateLimitRetries = 0;
+	}
+
 	log(QStringLiteral("[%1] Loading tags page `%2`").arg(m_site->url(), m_url.toString()), Logger::Info);
 
 	if (m_reply != nullptr) {
@@ -55,16 +63,28 @@ void TagApiBase::parseInternal()
 	if (!redirection.isEmpty()) {
 		QUrl newUrl = m_site->fixUrl(redirection.toString(), m_url);
 		log(QStringLiteral("[%1] Redirecting tags page `%2` to `%3`").arg(m_site->url(), m_url.toString(), newUrl.toString()), Logger::Info);
+		QString redirectReason;
+		if (NetworkFollow::takeRedirect(m_url, newUrl, &m_redirectsSeen, &m_redirectHops, &redirectReason) == NetworkFollow::Action::Stop) {
+			log(QStringLiteral("[%1] Stopping tag redirects: %2").arg(m_site->url(), redirectReason), Logger::Warning);
+			emit finishedLoading(this, LoadResult::Error);
+			return;
+		}
 		m_url = newUrl;
-		load();
+		load(false, true);
 		return;
 	}
 
 	// Detect HTTP 429 usage limit reached
 	const int statusCode = m_reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
 	if (statusCode == 429) {
+		QString retryReason;
+		if (NetworkFollow::takeRetry(&m_rateLimitRetries, &retryReason) == NetworkFollow::Action::Stop) {
+			log(QStringLiteral("[%1][%2] Giving up after rate limit (%3): %4").arg(m_site->url(), m_api->getName(), QString::number(statusCode), retryReason), Logger::Warning);
+			emit finishedLoading(this, LoadResult::Error);
+			return;
+		}
 		log(QStringLiteral("[%1][%2] Limit reached (%3). New try.").arg(m_site->url(), m_api->getName(), QString::number(statusCode)), Logger::Warning);
-		load(true);
+		load(true, true);
 		return;
 	}
 

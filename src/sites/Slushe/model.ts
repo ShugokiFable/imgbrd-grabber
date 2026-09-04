@@ -35,9 +35,14 @@ export const source: ISource = {
                     return "/api/?output=json&command=media.newest&type=" + type + "&offset=" + offset + "&amount=" + opts.limit;
                 },
                 parse: (src: string): IParsedSearch | IError => {
-                    const data = JSON.parse(src);
-                    if (!data.success || !data.data) {
-                        return { error: data.error || "Error" };
+                    let data: any;
+                    try {
+                        data = JSON.parse(src);
+                    } catch {
+                        return { error: "Invalid JSON" };
+                    }
+                    if (!data || !data.success || !data.data) {
+                        return { error: (data && data.error) || "Error" };
                     }
 
                     const images: IImage[] = data.data.map(buildImage);
