@@ -83,7 +83,7 @@ export const source: ISource = {
                     return "/";
                 },
                 parse: (src: string): boolean => {
-                    return src.indexOf("www.newgrounds.com") !== -1;
+                    return /https?:\/\/www\.newgrounds\.com(?:[/:?#]|$)/.test(src);
                 },
             },
         },

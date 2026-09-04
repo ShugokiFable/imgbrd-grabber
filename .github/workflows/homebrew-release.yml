@@ -5,6 +5,9 @@ on:
     types: [published]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 env:
   BREW_TAP: Bionus/imgbrd-grabber
   BREW_CASK: imgbrd-grabber
