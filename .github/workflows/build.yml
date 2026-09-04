@@ -16,6 +16,9 @@ on:
     branches-ignore:
       - crowdin
 
+permissions:
+  contents: read
+
 env:
   QT_VERSION: 6.11.1
   QT_MODULES: qtmultimedia qtimageformats qtnetworkauth qtshadertools
@@ -691,6 +694,8 @@ jobs:
     name: Upload to GitHub releases
     runs-on: ubuntu-latest
     needs: [version, linux, macos, windows, android]
+    permissions:
+      contents: write
 
     if: github.repository == 'Bionus/imgbrd-grabber' && github.event_name == 'push' && (needs.version.outputs.release == '1' || github.ref == 'refs/heads/develop')
 

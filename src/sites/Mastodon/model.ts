@@ -128,7 +128,7 @@ export const source: ISource = {
                     return "/about";
                 },
                 parse: (src: string): boolean => {
-                    return src.indexOf("joinmastodon.org") !== -1;
+                    return /https?:\/\/joinmastodon\.org(?:[/:?#]|$)/.test(src);
                 },
             },
         },

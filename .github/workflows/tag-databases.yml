@@ -3,12 +3,17 @@ name: Tag databases
 on:
   schedule:
     - cron: '0 3 * * 3' # 3 am every Wednesday
-  workflow_dispatch: 
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   tag_databases:
     name: Tag databases
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout
