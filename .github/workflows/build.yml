@@ -411,14 +411,13 @@ jobs:
       MYSQL_DRIVER_DIR: ${{ github.workspace }}\vendor\MySQL_driver
       VCINSTALLDIR: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC
       SCCACHE_DIR: ${{ github.workspace }}\.sccache
+      # Tag RelWithDebInfo + parallel cl.exe races on lexbor_static.pdb (C1041).
+      CMAKE_BUILD_PARALLEL_LEVEL: 1
 
     steps:
       - name: Set environment
         shell: bash
-        # RelWithDebInfo uses -Zi and a shared PDB. Parallel cl.exe under sccache
-        # then hits C1041 on lexbor_static.pdb even with /FS. Nightly already
-        # uses Release; tags must too.
-        run: echo "BUILD_TYPE=Release" >> $GITHUB_ENV
+        run: echo "BUILD_TYPE=$([ "$GRABBER_IS_NIGHTLY" = "1" ] && echo "Release" || echo "RelWithDebInfo")" >> $GITHUB_ENV
 
       - name: Checkout
         uses: actions/checkout@v7
